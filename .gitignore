@@ -15,8 +15,8 @@ env/
 logs/
 *.log
 artifacts/
-prediction/models/
 notebooks/.ipynb_checkpoints/
+prediction/models/
 
 # OS-specific
 .DS_Store

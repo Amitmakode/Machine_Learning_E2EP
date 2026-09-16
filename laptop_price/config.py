@@ -36,7 +36,7 @@ MODEL_DIR = ARTIFACTS_DIR / "model"
 PREDICTION_MODEL_DIR = PROJECT_ROOT / "prediction" / "models"
 
 CSV_FALLBACK_PATH = Path(
-    _secret("LAPTOP_DATA_CSV", str(PROJECT_ROOT / "data" / "laptop_data.csv"))
+    _secret("LAPTOP_DATA_CSV", str(PROJECT_ROOT / "laptop_data.csv"))
 )
 if not CSV_FALLBACK_PATH.is_absolute():
     CSV_FALLBACK_PATH = PROJECT_ROOT / CSV_FALLBACK_PATH
