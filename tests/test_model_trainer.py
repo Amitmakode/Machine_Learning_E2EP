@@ -1,4 +1,3 @@
-import pandas as pd
 import joblib
 
 from laptop_price.components.data_transformation import transform

@@ -1,6 +1,4 @@
 import json
-
-import pandas as pd
 import pytest
 
 from laptop_price.components.data_transformation import transform
