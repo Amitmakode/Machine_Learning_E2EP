@@ -43,6 +43,7 @@ st.markdown(
     .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.15rem; min-height: 92px; }
     .metric-label { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
     .metric-value { color: var(--ink); font-family: 'Space Grotesk', sans-serif; font-size: 1.2rem; font-weight: 700; margin-top: 0.35rem; }
+    .section-gap { height: 2.75rem; }
     .section-kicker { color: var(--teal); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; }
     .section-copy { color: var(--muted); margin: -0.45rem 0 1.2rem; }
     .stForm, [data-testid="stFileUploader"] { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 1.2rem; }
@@ -171,6 +172,7 @@ with metric_columns[1]:
 with metric_columns[2]:
     st.markdown('<div class="metric"><div class="metric-label">Workflow</div><div class="metric-value">Single + batch</div></div>', unsafe_allow_html=True)
 
+st.markdown('<div class="section-gap"></div>', unsafe_allow_html=True)
 st.markdown('<div class="section-kicker">01 / Quick estimate</div><h2>Describe your laptop</h2><div class="section-copy">Choose the closest specifications to generate a price estimate.</div>', unsafe_allow_html=True)
 if not features:
     st.warning("No feature metadata found. Run the training pipeline first.")
