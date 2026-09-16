@@ -1,0 +1,25 @@
+{
+    "ingestion": {
+        "raw_data_path": "D:\\Machine_Learning_E2EP\\artifacts\\raw\\laptop_raw.csv"
+    },
+    "transformation": {
+        "transformer": "artifacts\\transformed\\preprocessor.joblib",
+        "train_csv": "D:\\Machine_Learning_E2EP\\artifacts\\transformed\\train.csv",
+        "test_csv": "D:\\Machine_Learning_E2EP\\artifacts\\transformed\\test.csv"
+    },
+    "model": {
+        "model_path": "artifacts\\model\\best_model.joblib",
+        "train_score": 0.9655826615144387,
+        "test_score": 0.9650240530089602
+    },
+    "evaluation": {
+        "RMSE": 8243.503973813784,
+        "MAE": 5749.0160413520925,
+        "R2": 0.9650240530089602
+    },
+    "pushed": {
+        "versioned_path": "D:\\Machine_Learning_E2EP\\prediction\\models\\best_model_20260916_170839.joblib",
+        "archived_previous_active": "D:\\Machine_Learning_E2EP\\prediction\\models\\archive\\current_model_20260916_170839.joblib",
+        "active_path": "D:\\Machine_Learning_E2EP\\prediction\\models\\current_model.joblib"
+    }
+}
