@@ -1,8 +1,7 @@
-from sqlalchemy import create_engine
 import pandas as pd
-from pathlib import Path
-from laptop_price.config import MYSQL, RAW_DATA_DIR
-from laptop_price.entity.config_entity import DataIngestionConfig
+from sqlalchemy import create_engine
+
+from laptop_price.config import CSV_FALLBACK_PATH, MYSQL, RAW_DATA_DIR
 from laptop_price.entity.artifact_entity import DataIngestionArtifact
 from laptop_price.exception import PricePredictorException
 from laptop_price.logger import get_logger
@@ -11,29 +10,44 @@ logger = get_logger(__name__)
 
 
 def ingest_data() -> DataIngestionArtifact:
-    """Try to read from MySQL table; if fails, fallback to CSV at /mnt/data/laptop_data.csv"""
+    """Load source data from MySQL, falling back to the configured CSV path."""
+    raw_path = RAW_DATA_DIR / "laptop_raw.csv"
+
     try:
-        raw_path = RAW_DATA_DIR / 'laptop_raw.csv'
-        # build connection string
-        user = MYSQL['user']
-        pwd = MYSQL['password']
-        host = MYSQL['host']
-        port = MYSQL['port']
-        db = MYSQL['database']
-        table = MYSQL['table']
-        conn_str = f"mysql+pymysql://{user}:{pwd}@{host}:{port}/{db}"
+        df = None
+
         try:
-            engine = create_engine(conn_str)
-            logger.info('Attempting to read from MySQL')
-            df = pd.read_sql_table(table, con=engine)
-            logger.info('Read data from MySQL successfully')
-        except Exception as e:
-            logger.warning(f"MySQL read failed: {e}. Falling back to CSV.")
-            df = pd.read_csv('/mnt/data/laptop_data.csv')
+            connection_string = (
+                f"mysql+pymysql://{MYSQL['user']}:{MYSQL['password']}"
+                f"@{MYSQL['host']}:{MYSQL['port']}/{MYSQL['database']}"
+            )
+            logger.info("Attempting to read data from MySQL table '%s'", MYSQL["table"])
+            engine = create_engine(connection_string, pool_pre_ping=True)
+            with engine.connect() as connection:
+                df = pd.read_sql_table(MYSQL["table"], con=connection)
+            logger.info("Read %s rows from MySQL", len(df))
+        except Exception as database_error:
+            logger.warning("MySQL ingestion failed: %s", database_error)
+
+            if not CSV_FALLBACK_PATH.exists():
+                raise PricePredictorException(
+                    "MySQL ingestion failed and CSV fallback does not exist: "
+                    f"{CSV_FALLBACK_PATH}"
+                ) from database_error
+
+            logger.info("Reading CSV fallback from %s", CSV_FALLBACK_PATH)
+            df = pd.read_csv(CSV_FALLBACK_PATH)
+
+        if df is None or df.empty:
+            raise PricePredictorException("Ingestion produced no rows")
 
         raw_path.parent.mkdir(parents=True, exist_ok=True)
         df.to_csv(raw_path, index=False)
-
+        logger.info("Saved %s rows to %s", len(df), raw_path)
         return DataIngestionArtifact(raw_data_path=raw_path)
-    except Exception as e:
-        raise PricePredictorException(f"Data ingestion failed: {e}")
+
+    except PricePredictorException:
+        raise
+    except Exception as error:
+        logger.exception("Data ingestion failed")
+        raise PricePredictorException(f"Data ingestion failed: {error}") from error

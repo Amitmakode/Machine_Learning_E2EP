@@ -21,11 +21,12 @@ import joblib
 import pandas as pd
 import sys
 
-PROJECT_ROOT = Path.cwd()
+PROJECT_ROOT = Path(__file__).resolve().parent
 PREPROCESSOR_PATH = PROJECT_ROOT / "artifacts" / "transformed" / "preprocessor.joblib"
 MODEL_PATH = PROJECT_ROOT / "prediction" / "models" / "current_model.joblib"
 INPUT_CSV = PROJECT_ROOT / "artifacts" / "unseen_test" / "unseen_5.csv"
 OUTPUT_CSV = PROJECT_ROOT / "artifacts" / "unseen_test" / "unseen_5_with_preds.csv"
+DEFAULT_INPUT_CSV = PROJECT_ROOT / "artifacts" / "transformed" / "test.csv"
 
 def main():
     # 1) checks
@@ -38,16 +39,21 @@ def main():
         print("-> Ensure model was pushed to prediction/models/current_model.joblib")
         sys.exit(1)
     if not INPUT_CSV.exists():
-        print("ERROR: Input CSV not found at:", INPUT_CSV)
-        print("-> Place unseen CSV at this path or update INPUT_CSV variable.")
-        sys.exit(1)
+        if not DEFAULT_INPUT_CSV.exists():
+            print("ERROR: Input CSV not found at:", INPUT_CSV)
+            print("-> Run the training pipeline or place an unseen CSV at this path.")
+            sys.exit(1)
+        print("Unseen CSV not found; using generated test data:", DEFAULT_INPUT_CSV)
+        input_csv = DEFAULT_INPUT_CSV
+    else:
+        input_csv = INPUT_CSV
 
     # 2) load
     preprocessor = joblib.load(PREPROCESSOR_PATH)
     model = joblib.load(MODEL_PATH)
 
     # 3) load input
-    df = pd.read_csv(INPUT_CSV)
+    df = pd.read_csv(input_csv)
     # drop target column if present
     if "Price_INR" in df.columns:
         X = df.drop(columns=["Price_INR"])

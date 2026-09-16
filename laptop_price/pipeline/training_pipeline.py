@@ -137,7 +137,7 @@ def run_pipeline() -> dict:
         # 6) Model Pushing (version & active copy)
         # -----------------------
         logger.info("Step 6: Model pushing")
-        dest_models_dir = Path(PREDICTION_DIR) / "models"
+        dest_models_dir = Path(PREDICTION_DIR)
         archive_dir = Path(PREDICTION_DIR) / "archive"
         push_info = push_model(
             src_model_path=Path(model_artifact.model_path),
