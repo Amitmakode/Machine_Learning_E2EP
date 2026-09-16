@@ -64,6 +64,7 @@ MODEL_PATH = PROJECT_ROOT / "prediction" / "models" / "current_model.joblib"
 FEATURE_LIST_PATH = PROJECT_ROOT / "artifacts" / "transformed" / "feature_list.json"
 TRAIN_CSV_PATH = PROJECT_ROOT / "artifacts" / "transformed" / "train.csv"
 
+
 @st.cache_resource
 def load_artifacts():
     if not PREPROCESSOR_PATH.exists():
@@ -179,19 +180,33 @@ if not features:
 else:
     with st.form("single_prediction_form"):
         input_values = {}
-        left, right = st.columns(2)
-        for column in features:
-            if column in num_cols:
-                default = 0.0
-                if column in training_df.columns and not training_df[column].dropna().empty:
-                    default = float(training_df[column].median())
-                input_values[column] = left.number_input(column, value=default, key=f"num_{column}")
-            else:
-                options = training_uniques.get(column, [])
-                if options:
-                    input_values[column] = right.selectbox(column, options, key=f"cat_{column}")
-                else:
-                    input_values[column] = right.text_input(column, key=f"text_{column}")
+        for start in range(0, len(features), 6):
+            row_features = features[start : start + 6]
+            grid_columns = st.columns(6)
+            for grid_column, column in zip(grid_columns, row_features):
+                with grid_column:
+                    if column in num_cols:
+                        default = 0.0
+                        if column in training_df.columns and not training_df[column].dropna().empty:
+                            default = float(training_df[column].median())
+                        input_values[column] = st.number_input(
+                            column,
+                            value=default,
+                            key=f"num_{column}",
+                        )
+                    else:
+                        options = training_uniques.get(column, [])
+                        if options:
+                            input_values[column] = st.selectbox(
+                                column,
+                                options,
+                                key=f"cat_{column}",
+                            )
+                        else:
+                            input_values[column] = st.text_input(
+                                column,
+                                key=f"text_{column}",
+                            )
         submitted = st.form_submit_button("Estimate price")
 
     if submitted:
