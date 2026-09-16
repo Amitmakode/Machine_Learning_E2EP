@@ -1,18 +1,32 @@
-from dotenv import load_dotenv
-import os
 from pathlib import Path
+import os
 
-# Resolve paths from the repository/package location, not the shell's cwd.
+from dotenv import load_dotenv
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 load_dotenv(PROJECT_ROOT / ".env")
 
+
+def _secret(name: str, default: str = "") -> str:
+    """Read Streamlit secrets first, then environment variables."""
+    try:
+        import streamlit as st
+
+        value = st.secrets.get(name)
+        if value is not None and str(value) != "":
+            return str(value)
+    except Exception:
+        pass
+    return os.getenv(name, default)
+
+
 MYSQL = {
-    "user": os.getenv("DB_USER", "root"),
-    "password": os.getenv("DB_PASSWORD", ""),
-    "host": os.getenv("DB_HOST", "localhost"),
-    "port": int(os.getenv("DB_PORT", "3306")),
-    "database": os.getenv("DB_NAME", "laptop_data"),
-    "table": os.getenv("DB_TABLE", "laptop_price"),
+    "user": _secret("DB_USER", "root"),
+    "password": _secret("DB_PASSWORD", ""),
+    "host": _secret("DB_HOST", "localhost"),
+    "port": int(_secret("DB_PORT", "3306")),
+    "database": _secret("DB_NAME", "laptop_data"),
+    "table": _secret("DB_TABLE", "laptop_price"),
 }
 
 ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
@@ -21,9 +35,8 @@ TRANSFORMED_DATA_DIR = ARTIFACTS_DIR / "transformed"
 MODEL_DIR = ARTIFACTS_DIR / "model"
 PREDICTION_MODEL_DIR = PROJECT_ROOT / "prediction" / "models"
 
-# Repository-relative CSV fallback; override with LAPTOP_DATA_CSV when needed.
 CSV_FALLBACK_PATH = Path(
-    os.getenv("LAPTOP_DATA_CSV", str(PROJECT_ROOT / "data" / "laptop_data.csv"))
+    _secret("LAPTOP_DATA_CSV", str(PROJECT_ROOT / "data" / "laptop_data.csv"))
 )
 if not CSV_FALLBACK_PATH.is_absolute():
     CSV_FALLBACK_PATH = PROJECT_ROOT / CSV_FALLBACK_PATH
