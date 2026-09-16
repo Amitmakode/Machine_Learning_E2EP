@@ -20,7 +20,7 @@ laptop_price/
 ├── components/      # ingestion, validation, transformation, training, evaluation
 ├── entity/           # configuration and artifact data classes
 ├── pipeline/         # end-to-end training orchestration
-├── prediction/       # prediction utilities
+├── prediction/       # batch prediction utilities
 ├── config.py
 ├── exception.py
 ├── logger.py
@@ -28,6 +28,9 @@ laptop_price/
 
 app.py               # Streamlit inference app
 main.py              # training pipeline entry point
+check_model.py       # prediction smoke test
+prediction/          # versioned serving models and active model copy
+artifacts/            # generated raw, transformed, and evaluation artifacts
 requirements.txt
 .env.example
 ```
@@ -53,7 +56,7 @@ Set database values in `.env`, or set `LAPTOP_DATA_CSV` to a local CSV path. The
 python main.py
 ```
 
-The pipeline writes generated artifacts under `artifacts/` and the active model under `prediction/models/`. These generated files are intentionally ignored by Git; run training before starting the app unless you provide equivalent inference artifacts through your deployment process.
+The pipeline writes generated artifacts under `artifacts/` and the active model under `prediction/models/current_model.joblib`. These generated files are intentionally ignored by Git; run training before starting the app unless you provide equivalent inference artifacts through your deployment process.
 
 ## Run Streamlit
 
@@ -62,6 +65,14 @@ streamlit run app.py
 ```
 
 The app supports single-record prediction and batch CSV prediction. Input columns must match the feature schema produced during training.
+
+To verify the generated model outside Streamlit:
+
+```bash
+python check_model.py
+```
+
+If `artifacts/unseen_test/unseen_5.csv` is not present, the check uses the generated `artifacts/transformed/test.csv` file.
 
 ## Security
 
