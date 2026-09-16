@@ -14,9 +14,8 @@ env/
 # Logs and outputs
 logs/
 *.log
-artifacts/
 notebooks/.ipynb_checkpoints/
-prediction/models/
+
 
 # OS-specific
 .DS_Store
