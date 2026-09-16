@@ -1,5 +1,6 @@
 import pandas as pd
 from sqlalchemy import create_engine
+from sqlalchemy.exc import SQLAlchemyError
 
 from laptop_price.config import CSV_FALLBACK_PATH, MYSQL, RAW_DATA_DIR
 from laptop_price.entity.artifact_entity import DataIngestionArtifact
@@ -23,7 +24,7 @@ def ingest_data() -> DataIngestionArtifact:
         with engine.connect() as connection:
             df = pd.read_sql_table(MYSQL["table"], con=connection)
         logger.info("Read %s rows from MySQL", len(df))
-    except (ConnectionError, OSError, ValueError, RuntimeError) as database_error:
+    except (SQLAlchemyError, ConnectionError, OSError, ValueError, RuntimeError) as database_error:
         logger.warning("MySQL ingestion failed: %s", database_error)
         if not CSV_FALLBACK_PATH.exists():
             raise PricePredictorException(
@@ -31,7 +32,12 @@ def ingest_data() -> DataIngestionArtifact:
                 f"{CSV_FALLBACK_PATH}"
             ) from database_error
         logger.info("Reading CSV fallback from %s", CSV_FALLBACK_PATH)
-        df = pd.read_csv(CSV_FALLBACK_PATH)
+        try:
+            df = pd.read_csv(CSV_FALLBACK_PATH)
+        except (OSError, ValueError) as csv_error:
+            raise PricePredictorException(
+                f"Unable to read CSV fallback: {CSV_FALLBACK_PATH}"
+            ) from csv_error
 
     if df.empty:
         raise PricePredictorException("Ingestion produced no rows")
