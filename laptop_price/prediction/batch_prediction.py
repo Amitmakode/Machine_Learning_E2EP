@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Union, Optional, Dict
+from typing import Union, Optional
 import pandas as pd
 
 from laptop_price.utils import load_object
