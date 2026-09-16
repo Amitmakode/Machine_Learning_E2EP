@@ -1,11 +1,18 @@
 [server]
 headless = true
-enableCORS = false
+enableCORS = true
 enableXsrfProtection = true
 
 [theme]
 base = "light"
 primaryColor = "#2563eb"
+
+[theme.sidebar]
+primaryColor = "#137a72"
+backgroundColor = "#eef3f0"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#17212b"
+font = "sans serif"
 
 [browser]
 gatherUsageStats = false
