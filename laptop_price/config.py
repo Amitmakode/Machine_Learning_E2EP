@@ -2,10 +2,10 @@ from dotenv import load_dotenv
 import os
 from pathlib import Path
 
-# Load .env file (make sure this file exists at project root)
-load_dotenv()
+# Resolve paths from the repository/package location, not the shell's cwd.
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(PROJECT_ROOT / ".env")
 
-# MySQL Configuration
 MYSQL = {
     "user": os.getenv("DB_USER", "root"),
     "password": os.getenv("DB_PASSWORD", ""),
@@ -15,45 +15,23 @@ MYSQL = {
     "table": os.getenv("DB_TABLE", "laptop_price"),
 }
 
-# Directories (paths used in pipeline)
-ARTIFACTS_DIR = Path("artifacts")
+ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
 RAW_DATA_DIR = ARTIFACTS_DIR / "raw"
 TRANSFORMED_DATA_DIR = ARTIFACTS_DIR / "transformed"
 MODEL_DIR = ARTIFACTS_DIR / "model"
-PREDICTION_MODEL_DIR = Path("prediction") / "models"
+PREDICTION_MODEL_DIR = PROJECT_ROOT / "prediction" / "models"
 
-# Ensure directories exist
-for d in [RAW_DATA_DIR, TRANSFORMED_DATA_DIR, MODEL_DIR, PREDICTION_MODEL_DIR]:
-    d.mkdir(parents=True, exist_ok=True)
+# Repository-relative CSV fallback; override with LAPTOP_DATA_CSV when needed.
+CSV_FALLBACK_PATH = Path(
+    os.getenv("LAPTOP_DATA_CSV", str(PROJECT_ROOT / "data" / "laptop_data.csv"))
+)
+if not CSV_FALLBACK_PATH.is_absolute():
+    CSV_FALLBACK_PATH = PROJECT_ROOT / CSV_FALLBACK_PATH
 
-
-
-
-
-
-
-#from pathlib import Path
-
-
-#PROJECT_ROOT = Path.cwd()
-#ARTIFACTS_DIR = PROJECT_ROOT / "artifacts"
-#RAW_DATA_DIR = ARTIFACTS_DIR / "raw"
-#TRANSFORMED_DIR = ARTIFACTS_DIR / "transformed"
-#MODEL_DIR = ARTIFACTS_DIR / "model"
-#PREDICTION_DIR = PROJECT_ROOT / "prediction"
-
-
-# MySQL fallback config - edit with your local credentials if you want DB connection
-#MYSQL = {
-#"user": "root",
-#"password": "12345",
-#"host": "localhost",
-#"port": 3306,
-#"database": "laptop_data",
-#"table": "laptop_price"
-#}
-
-
-# create dirs
-#for p in [ARTIFACTS_DIR, RAW_DATA_DIR, TRANSFORMED_DIR, MODEL_DIR, PREDICTION_DIR]:
- #   p.mkdir(parents=True, exist_ok=True)
+for directory in (
+    RAW_DATA_DIR,
+    TRANSFORMED_DATA_DIR,
+    MODEL_DIR,
+    PREDICTION_MODEL_DIR,
+):
+    directory.mkdir(parents=True, exist_ok=True)
