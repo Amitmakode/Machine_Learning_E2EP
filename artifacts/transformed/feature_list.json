@@ -1,0 +1,18 @@
+{
+  "num_cols": [
+    "Screen_Size",
+    "Weight_kg",
+    "Battery_Hours"
+  ],
+  "cat_cols": [
+    "Brand",
+    "CPU",
+    "RAM",
+    "Primary_Storage",
+    "GPU",
+    "Resolution",
+    "OS",
+    "Type",
+    "Touchscreen"
+  ]
+}

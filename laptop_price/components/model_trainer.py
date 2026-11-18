@@ -1,17 +1,17 @@
 # laptop_price/components/model_trainer.py
 
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-from pathlib import Path
-from typing import Tuple
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-from laptop_price.utils import load_df, load_object, save_object
 from laptop_price.entity.artifact_entity import ModelTrainerArtifact
 from laptop_price.exception import PricePredictorException
 from laptop_price.logger import get_logger
+from laptop_price.utils import load_object, save_object
 
 logger = get_logger(__name__)
 
@@ -45,46 +45,51 @@ def train_model(
     """
 
     try:
-        # 1. Load train/test CSVs
         logger.info("Loading transformed train/test CSVs")
         train_df = pd.read_csv(transformed_train_csv)
         test_df = pd.read_csv(transformed_test_csv)
 
         if target_col not in train_df.columns or target_col not in test_df.columns:
-            raise PricePredictorException(f"Target column '{target_col}' not found in train/test CSVs")
+            raise PricePredictorException(
+                f"Target column '{target_col}' not found in train/test CSVs"
+            )
 
-        # 2. Split into X/y
         X_train = train_df.drop(columns=[target_col])
         y_train = train_df[target_col]
         X_test = test_df.drop(columns=[target_col])
         y_test = test_df[target_col]
 
-        # 3. Load preprocessor (fitted on training data in data_transformation step)
-        logger.info(f"Loading preprocessor from: {transformer_path}")
+        logger.info("Loading preprocessor from: %s", transformer_path)
         preprocessor = load_object(Path(transformer_path))
 
-        # 4. Transform features
         logger.info("Transforming features using preprocessor")
         X_train_t = preprocessor.transform(X_train)
         X_test_t = preprocessor.transform(X_test)
 
-        # 5. Train baseline Linear Regression
         logger.info("Training LinearRegression (baseline)")
         lr = LinearRegression()
         lr.fit(X_train_t, y_train)
         lr_pred = lr.predict(X_test_t)
         lr_eval = _evaluate(y_test, lr_pred)
-        logger.info(f"LinearRegression evaluation -> RMSE: {lr_eval['rmse']:.4f}, MAE: {lr_eval['mae']:.4f}, R2: {lr_eval['r2']:.4f}")
+        logger.info(
+            "LinearRegression evaluation -> RMSE: %.4f, MAE: %.4f, R2: %.4f",
+            lr_eval["rmse"],
+            lr_eval["mae"],
+            lr_eval["r2"],
+        )
 
-        # 6. Train RandomForestRegressor
         logger.info("Training RandomForestRegressor")
         rf = RandomForestRegressor(n_estimators=100, random_state=42, n_jobs=-1)
         rf.fit(X_train_t, y_train)
         rf_pred = rf.predict(X_test_t)
         rf_eval = _evaluate(y_test, rf_pred)
-        logger.info(f"RandomForest evaluation -> RMSE: {rf_eval['rmse']:.4f}, MAE: {rf_eval['mae']:.4f}, R2: {rf_eval['r2']:.4f}")
+        logger.info(
+            "RandomForest evaluation -> RMSE: %.4f, MAE: %.4f, R2: %.4f",
+            rf_eval["rmse"],
+            rf_eval["mae"],
+            rf_eval["r2"],
+        )
 
-        # 7. Choose best model by RMSE (lower is better)
         if rf_eval["rmse"] <= lr_eval["rmse"]:
             best_model = rf
             best_eval = rf_eval
@@ -94,15 +99,13 @@ def train_model(
             best_eval = lr_eval
             chosen = "LinearRegression"
 
-        logger.info(f"Selected best model: {chosen} with RMSE = {best_eval['rmse']:.4f}")
+        logger.info("Selected best model: %s with RMSE = %.4f", chosen, best_eval["rmse"])
 
-        # 8. Save best model to disk
         model_path = Path(model_output_path)
         model_path.parent.mkdir(parents=True, exist_ok=True)
         save_object(best_model, model_path)
-        logger.info(f"Saved best model to: {model_path}")
+        logger.info("Saved best model to: %s", model_path)
 
-        # 9. Compute R^2 (score) on transformed sets for artifact
         train_score = float(best_model.score(X_train_t, y_train))
         test_score = float(best_model.score(X_test_t, y_test))
 
@@ -111,9 +114,13 @@ def train_model(
             train_score=train_score,
             test_score=test_score,
         )
-        logger.info(f"ModelTrainerArtifact created -> train_score: {train_score:.4f}, test_score: {test_score:.4f}")
+        logger.info(
+            "ModelTrainerArtifact created -> train_score: %.4f, test_score: %.4f",
+            train_score,
+            test_score,
+        )
         return artifact
 
-    except Exception as e:
+    except Exception as error:
         logger.exception("Exception occurred in model training")
-        raise PricePredictorException(f"Model training failed: {e}")
+        raise PricePredictorException(f"Model training failed: {error}") from error

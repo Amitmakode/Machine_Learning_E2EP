@@ -4,7 +4,7 @@ __pycache__/
 *.pyo
 *.pyd
 *.egg-info/
-venv/
+.venv/
 env/
 
 # IDE
@@ -14,9 +14,8 @@ env/
 # Logs and outputs
 logs/
 *.log
-artifacts/
 notebooks/.ipynb_checkpoints/
-prediction/models/
+
 
 # OS-specific
 .DS_Store
